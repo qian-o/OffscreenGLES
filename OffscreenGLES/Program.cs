@@ -116,7 +116,7 @@ internal unsafe class Program
         gl.Viewport(0, 0, (uint)Width, (uint)Height);
         gl.ClearColor(0.0f, 0.5f, 0.5f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-    
+
         gl.UseProgram(program);
 
         fixed (float* verticesPtr = vertices)
