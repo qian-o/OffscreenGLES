@@ -5,7 +5,7 @@ using SkiaSharp;
 
 internal unsafe class Program
 {
-    private readonly static int[] Configs =
+    private static readonly int[] Configs =
     [
         Egl.RedSize, 8,
         Egl.GreenSize, 8,
@@ -16,11 +16,12 @@ internal unsafe class Program
         Egl.None
     ];
 
-    private readonly static int Width = 1000;
-    private readonly static int Height = 1000;
-    private readonly static string OutputFilePath = "output.bmp";
+    private static readonly int Width = 1000;
+    private static readonly int Height = 1000;
 
-    private readonly static string vs = """
+    private static readonly string OutputFilePath = "output.bmp";
+
+    private static readonly string VS = """
         attribute vec3 position;
 
         void main()
@@ -28,8 +29,7 @@ internal unsafe class Program
             gl_Position = vec4(position, 1.0);
         }
         """;
-
-    private readonly static string fs = """
+    private static readonly string FS = """
         precision mediump float;
 
         void main()
@@ -88,11 +88,11 @@ internal unsafe class Program
     private static void Init(GL gl)
     {
         uint vertexShader = gl.CreateShader(ShaderType.VertexShader);
-        gl.ShaderSource(vertexShader, vs);
+        gl.ShaderSource(vertexShader, VS);
         gl.CompileShader(vertexShader);
 
         uint fragmentShader = gl.CreateShader(ShaderType.FragmentShader);
-        gl.ShaderSource(fragmentShader, fs);
+        gl.ShaderSource(fragmentShader, FS);
         gl.CompileShader(fragmentShader);
 
         program = gl.CreateProgram();

@@ -4,29 +4,45 @@ using EglNativePixmapType = nint;
 using EglNativeWindowType = nint;
 
 namespace OffscreenGLES;
+
 public struct EglBoolean
 {
     public int Value;
 
-    public static implicit operator bool(EglBoolean value) => value.Value is not 0;
+    public static implicit operator bool(EglBoolean value)
+    {
+        return value.Value is not 0;
+    }
 }
 
 public struct EglConfig
 {
     public nint Handle;
 
-    public static implicit operator nint(EglConfig value) => value.Handle;
+    public static implicit operator nint(EglConfig value)
+    {
+        return value.Handle;
+    }
 
-    public static implicit operator EglConfig(nint value) => new() { Handle = value };
+    public static implicit operator EglConfig(nint value)
+    {
+        return new() { Handle = value };
+    }
 }
 
 public struct EglContext
 {
     public nint Handle;
 
-    public static implicit operator nint(EglContext value) => value.Handle;
+    public static implicit operator nint(EglContext value)
+    {
+        return value.Handle;
+    }
 
-    public static implicit operator EglContext(nint value) => new() { Handle = value };
+    public static implicit operator EglContext(nint value)
+    {
+        return new() { Handle = value };
+    }
 }
 
 public struct EglDisplay
@@ -217,37 +233,6 @@ public unsafe partial class Egl
     public const int GlTextureCubeMapNegativeZ = 0x30B8;
     public const int ImagePreserved = 0x30D2;
     public const nint NoImage = 0;
-
-    static Egl()
-    {
-        string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-
-        if (OperatingSystem.IsWindows())
-        {
-            string runtimePath = Path.Combine(AppContext.BaseDirectory, "runtimes", $"win-{architecture}", "native");
-
-            NativeLibrary.Load(Path.Combine(runtimePath, "libGLESv2.dll"));
-            NativeLibrary.Load(Path.Combine(runtimePath, "libEGL.dll"));
-        }
-        else if (OperatingSystem.IsLinux())
-        {
-            string runtimePath = Path.Combine(AppContext.BaseDirectory, "runtimes", $"linux-{architecture}", "native");
-
-            NativeLibrary.Load(Path.Combine(runtimePath, "libGLESv2.so"));
-            NativeLibrary.Load(Path.Combine(runtimePath, "libEGL.so"));
-        }
-        else if (OperatingSystem.IsMacOS())
-        {
-            string runtimePath = Path.Combine(AppContext.BaseDirectory, "runtimes", $"osx-{architecture}", "native");
-
-            NativeLibrary.Load(Path.Combine(runtimePath, "libGLESv2.dylib"));
-            NativeLibrary.Load(Path.Combine(runtimePath, "libEGL.dylib"));
-        }
-        else
-        {
-            throw new PlatformNotSupportedException("Only Windows, Linux and macOS are supported.");
-        }
-    }
 
     [LibraryImport("libEGL")]
     private static partial EglBoolean eglChooseConfig(EglDisplay dpy, int* attribList, EglConfig* configs, int configSize, int* numConfig);
@@ -448,9 +433,7 @@ public unsafe partial class Egl
     public static string? QueryString(EglDisplay dpy, int name)
     {
         byte* ptr = eglQueryString(dpy, name);
-        if (ptr == null)
-            return null;
-        return Marshal.PtrToStringUTF8((nint)ptr);
+        return ptr is null ? null : Marshal.PtrToStringUTF8((nint)ptr);
     }
 
     public static bool QuerySurface(EglDisplay dpy, EglSurface surface, int attribute, out int value)
