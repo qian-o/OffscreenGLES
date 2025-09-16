@@ -19,22 +19,34 @@ internal unsafe class Program
     private static readonly int Width = 1000;
     private static readonly int Height = 1000;
 
-    private static readonly string OutputFilePath = "output.bmp";
+    private static readonly string OutputFilePath = "output.png";
 
     private static readonly string VS = """
-        attribute vec3 position;
+        #version 300 es
+
+        in vec3 position;
+        in vec3 color;
+
+        out vec3 fragColor;
 
         void main()
         {
             gl_Position = vec4(position, 1.0);
+            fragColor = color;
         }
         """;
     private static readonly string FS = """
+        #version 300 es
+
         precision mediump float;
+
+        in vec3 fragColor;
+
+        out vec4 outColor;
 
         void main()
         {
-            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+            outColor = vec4(fragColor, 1.0);
         }
         """;
 
@@ -102,6 +114,11 @@ internal unsafe class Program
 
         gl.DeleteShader(vertexShader);
         gl.DeleteShader(fragmentShader);
+
+        gl.UseProgram(program);
+        gl.EnableVertexAttribArray(0);
+        gl.EnableVertexAttribArray(1);
+        gl.UseProgram(0);
     }
 
     private static void Render(GL gl)
@@ -113,36 +130,44 @@ internal unsafe class Program
              0.0f,  0.5f, 0.0f
         ];
 
+        float[] colors =
+        [
+            1.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 1.0f
+        ];
+
+        gl.UseProgram(program);
         gl.Viewport(0, 0, (uint)Width, (uint)Height);
         gl.ClearColor(0.0f, 0.5f, 0.5f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-        gl.UseProgram(program);
-
         fixed (float* verticesPtr = vertices)
+        fixed (float* colorsPtr = colors)
         {
-            gl.EnableVertexAttribArray(0);
             gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, (nint)verticesPtr);
+            gl.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 0, (nint)colorsPtr);
+
             gl.DrawArrays(PrimitiveType.Triangles, 0, 3);
-            gl.DisableVertexAttribArray(0);
         }
     }
 
     private static void ReadPixels(GL gl)
     {
+        SKImageInfo imageInfo = new(Width, Height, SKColorType.Rgba8888);
+
         byte[] pixels = new byte[Width * Height * 4];
 
         fixed (byte* pixelsPtr = pixels)
         {
             gl.ReadPixels(0, 0, (uint)Width, (uint)Height, PixelFormat.Rgba, PixelType.UnsignedByte, pixelsPtr);
 
-            SKImage image = SKImage.FromPixels(new SKImageInfo(Width, Height, SKColorType.Rgba8888), (nint)pixelsPtr);
+            SKSurface surface = SKSurface.Create(imageInfo);
 
-            using SKData data = image.Encode();
+            surface.Canvas.Scale(1, -1, Width / 2, Height / 2);
+            surface.Canvas.DrawImage(SKImage.FromPixels(imageInfo, (nint)pixelsPtr), 0, 0);
 
-            using FileStream stream = File.Create(OutputFilePath);
-
-            data.SaveTo(stream);
+            surface.Snapshot().Encode(SKEncodedImageFormat.Png, 100).SaveTo(File.Create(OutputFilePath));
         }
     }
 }
